@@ -126,7 +126,9 @@ onMounted(loadLessons)
 
       <section class="lesson-grid" aria-label="Available coding classes">
         <article v-for="lesson in sortedLessons" :key="lesson.id" class="lesson-card">
-          <div class="lesson-icon" aria-hidden="true">{{ lesson.icon || '📚' }}</div>
+          <div class="lesson-icon" aria-hidden="true">
+            <i :class="lesson.icon || 'fa-solid fa-book-open'"></i>
+          </div>
           <p class="lesson-location">{{ lesson.location }}</p>
           <h2>{{ lesson.subject }}</h2>
           <div class="lesson-details">
