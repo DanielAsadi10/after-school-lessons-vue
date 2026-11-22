@@ -30,6 +30,12 @@ h1 { max-width: 720px; margin: 0.5rem 0; font-size: clamp(2.25rem, 6vw, 4rem); l
 .cart-item button { width: auto; }
 .cart-empty { color: #586174; }
 .cart-total { margin-bottom: 0; text-align: right; font-weight: 700; }
+.checkout-form { display: grid; gap: 0.9rem; max-width: 440px; margin: 1.5rem 0 0 auto; }
+.checkout-form h3 { margin: 0; }
+.checkout-form label { display: grid; gap: 0.4rem; color: #586174; font-weight: 600; }
+.checkout-form input { min-height: 2.7rem; padding: 0.55rem 0.7rem; border: 1px solid #d5dbea; border-radius: 0.6rem; color: #172033; font: inherit; }
+.error-message { color: #a4262c; }
+.success-message { color: #187343; font-weight: 700; }
 .lesson-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1rem; margin-top: 2.5rem; }
 .lesson-card { display: flex; flex-direction: column; min-height: 250px; padding: 1.25rem; border: 1px solid #e0e5ef; border-radius: 1rem; background: white; box-shadow: 0 8px 24px rgb(28 42 74 / 5%); }
 .lesson-icon { font-size: 2rem; }

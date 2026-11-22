@@ -9,6 +9,11 @@ const sortBy = ref('subject')
 const sortDirection = ref('asc')
 const cartItems = ref([])
 const isCartOpen = ref(false)
+const customerName = ref('')
+const customerPhone = ref('')
+const checkoutError = ref('')
+const orderMessage = ref('')
+const isSubmitting = ref(false)
 
 const sortedLessons = computed(() => {
   return [...lessons.value].sort((left, right) => {
@@ -38,6 +43,53 @@ function removeFromCart(index) {
   const lesson = lessons.value.find((item) => item.id === removedLesson.id)
 
   if (lesson) lesson.spaces += 1
+}
+
+async function checkout() {
+  checkoutError.value = ''
+  orderMessage.value = ''
+  isSubmitting.value = true
+
+  const quantities = new Map()
+  for (const item of cartItems.value) quantities.set(item.id, (quantities.get(item.id) || 0) + 1)
+
+  try {
+    for (const [id, quantity] of quantities) {
+      const lesson = lessons.value.find((item) => item.id === id)
+      const response = await fetch(`${apiBaseUrl}/lessons/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ spaces: lesson.spaces }),
+      })
+      if (!response.ok) throw new Error(`Could not update spaces for ${lesson.subject}.`)
+    }
+
+    const orderResponse = await fetch(`${apiBaseUrl}/orders`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: customerName.value.trim(),
+        phone: customerPhone.value.trim(),
+        lessons: [...quantities].map(([id, quantity]) => {
+          const lesson = lessons.value.find((item) => item.id === id)
+          return { id, subject: lesson.subject, quantity, price: lesson.price }
+        }),
+        total: cartTotal.value,
+      }),
+    })
+    const orderResult = await orderResponse.json()
+    if (!orderResponse.ok) throw new Error(orderResult.error || 'Could not submit your order.')
+
+    orderMessage.value = 'Thanks, ' + customerName.value.trim() + '! Your order has been saved.'
+    cartItems.value = []
+    customerName.value = ''
+    customerPhone.value = ''
+    await loadLessons()
+  } catch (error) {
+    checkoutError.value = error.message || 'We could not submit your order. Please try again.'
+  } finally {
+    isSubmitting.value = false
+  }
 }
 
 async function loadLessons() {
@@ -80,6 +132,8 @@ onMounted(loadLessons)
 
     <section v-if="isCartOpen" class="cart-panel" aria-label="Shopping cart">
       <h2>Your shopping cart</h2>
+      <p v-if="orderMessage" class="success-message" role="status">{{ orderMessage }}</p>
+      <p v-if="checkoutError" class="error-message" role="alert">{{ checkoutError }}</p>
       <p v-if="cartItems.length === 0" class="cart-empty">Your cart is empty.</p>
       <template v-else>
         <ul class="cart-items">
@@ -89,6 +143,20 @@ onMounted(loadLessons)
           </li>
         </ul>
         <p class="cart-total">Cart total: &pound;{{ cartTotal }}</p>
+        <form class="checkout-form" @submit.prevent="checkout">
+          <h3>Checkout</h3>
+          <label>
+            Full name
+            <input v-model="customerName" type="text" required minlength="2" autocomplete="name" />
+          </label>
+          <label>
+            Phone number
+            <input v-model="customerPhone" type="tel" required pattern="[0-9+() .-]{7,20}" autocomplete="tel" />
+          </label>
+          <button type="submit" :disabled="isSubmitting">
+            {{ isSubmitting ? 'Submitting order…' : 'Submit order' }}
+          </button>
+        </form>
       </template>
     </section>
 
