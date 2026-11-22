@@ -7,6 +7,8 @@ const loadError = ref('')
 const apiBaseUrl = import.meta.env.VITE_API_URL || '/api'
 const sortBy = ref('subject')
 const sortDirection = ref('asc')
+const cartItems = ref([])
+const isCartOpen = ref(false)
 
 const sortedLessons = computed(() => {
   return [...lessons.value].sort((left, right) => {
@@ -19,6 +21,24 @@ const sortedLessons = computed(() => {
     return sortDirection.value === 'asc' ? comparison : -comparison
   })
 })
+
+const cartTotal = computed(() => {
+  return cartItems.value.reduce((total, lesson) => total + Number(lesson.price || 0), 0)
+})
+
+function addToCart(lesson) {
+  if (lesson.spaces <= 0) return
+
+  lesson.spaces -= 1
+  cartItems.value.push({ ...lesson })
+}
+
+function removeFromCart(index) {
+  const [removedLesson] = cartItems.value.splice(index, 1)
+  const lesson = lessons.value.find((item) => item.id === removedLesson.id)
+
+  if (lesson) lesson.spaces += 1
+}
 
 async function loadLessons() {
   isLoading.value = true
@@ -49,6 +69,30 @@ onMounted(loadLessons)
     <h1>Coding classes for curious minds</h1>
     <p class="intro">Explore practical classes and find a new skill to learn.</p>
 
+    <button
+      class="cart-toggle"
+      type="button"
+      :disabled="cartItems.length === 0 && !isCartOpen"
+      @click="isCartOpen = !isCartOpen"
+    >
+      {{ isCartOpen ? 'Back to classes' : 'Shopping cart (' + cartItems.length + ')' }}
+    </button>
+
+    <section v-if="isCartOpen" class="cart-panel" aria-label="Shopping cart">
+      <h2>Your shopping cart</h2>
+      <p v-if="cartItems.length === 0" class="cart-empty">Your cart is empty.</p>
+      <template v-else>
+        <ul class="cart-items">
+          <li v-for="(lesson, index) in cartItems" :key="index" class="cart-item">
+            <span>{{ lesson.subject }} — &pound;{{ lesson.price }} per term</span>
+            <button type="button" @click="removeFromCart(index)">Remove</button>
+          </li>
+        </ul>
+        <p class="cart-total">Cart total: &pound;{{ cartTotal }}</p>
+      </template>
+    </section>
+
+    <template v-else>
     <p v-if="isLoading" class="status-message" role="status">Loading classes…</p>
 
     <div v-else-if="loadError" class="error-message" role="alert">
@@ -89,9 +133,12 @@ onMounted(loadLessons)
             <span>&pound;{{ lesson.price }} per term</span>
             <span>{{ lesson.spaces }} spaces</span>
           </div>
-          <button type="button" disabled>Add to cart</button>
+          <button type="button" :disabled="lesson.spaces <= 0" @click="addToCart(lesson)">
+            Add to cart
+          </button>
         </article>
       </section>
+    </template>
     </template>
   </main>
 </template>
