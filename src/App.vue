@@ -7,6 +7,7 @@ const loadError = ref('')
 const apiBaseUrl = import.meta.env.VITE_API_URL || '/api'
 const sortBy = ref('subject')
 const sortDirection = ref('asc')
+const searchTerm = ref('')
 const cartItems = ref([])
 const isCartOpen = ref(false)
 const customerName = ref('')
@@ -112,6 +113,28 @@ async function loadLessons() {
   }
 }
 
+async function searchLessons() {
+  const query = searchTerm.value.trim()
+  if (!query) {
+    await loadLessons()
+    return
+  }
+
+  isLoading.value = true
+  loadError.value = ''
+  try {
+    const response = await fetch(`${apiBaseUrl}/lessons/search?q=${encodeURIComponent(query)}`)
+    const result = await response.json()
+    if (!response.ok) throw new Error(result.error || 'The lesson search failed.')
+    lessons.value = result
+  } catch (error) {
+    console.error('Could not search lessons:', error)
+    loadError.value = error.message || 'We could not search classes right now. Please try again.'
+  } finally {
+    isLoading.value = false
+  }
+}
+
 onMounted(loadLessons)
 </script>
 
@@ -174,6 +197,14 @@ onMounted(loadLessons)
 
     <template v-else>
       <div class="sort-controls">
+        <form class="search-form" @submit.prevent="searchLessons">
+          <label for="lesson-search">Search by subject or location</label>
+          <div class="search-input-row">
+            <input id="lesson-search" v-model="searchTerm" type="search" maxlength="100" />
+            <button type="submit">Search</button>
+            <button class="clear-search" type="button" @click="searchTerm = ''; loadLessons()">Clear</button>
+          </div>
+        </form>
         <label>
           Sort lessons by
           <select v-model="sortBy">
