@@ -1,7 +1,8 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
+  base: command === 'build' ? '/after-school-lessons-vue/' : '/',
   plugins: [vue()],
   server: {
     proxy: {
@@ -12,4 +13,4 @@ export default defineConfig({
       },
     },
   },
-})
+}))
