@@ -27,6 +27,7 @@ h1 { max-width: 720px; margin: 0.5rem 0; font-size: clamp(2.25rem, 6vw, 4rem); l
 .search-input-row input { flex: 1; min-width: 0; min-height: 2.6rem; padding: 0.45rem 0.7rem; border: 1px solid #d5dbea; border-radius: 0.6rem; font: inherit; }
 .search-input-row button { width: auto; }
 .search-input-row .clear-search { color: #394158; background: #e7eaf1; }
+.teacher-message { flex: 1 1 100%; margin: 0; }
 .cart-toggle { width: auto; min-width: 12rem; margin-top: 1.5rem; }
 .cart-panel { margin-top: 1rem; padding: 1.25rem; border: 1px solid #e0e5ef; border-radius: 1rem; background: white; }
 .cart-panel h2 { margin: 0 0 0.75rem; }

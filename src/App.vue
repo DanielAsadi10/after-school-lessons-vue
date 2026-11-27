@@ -15,9 +15,15 @@ const customerPhone = ref('')
 const checkoutError = ref('')
 const orderMessage = ref('')
 const isSubmitting = ref(false)
+const teachers = ref([])
+const selectedTeacherId = ref('')
+const teacherLessons = ref([])
+const teacherEnrolment = ref(null)
+const teacherError = ref('')
 
-const sortedLessons = computed(() => {
-  return [...lessons.value].sort((left, right) => {
+const displayedLessons = computed(() => {
+  const source = selectedTeacherId.value ? teacherLessons.value : lessons.value
+  return [...source].sort((left, right) => {
     const leftValue = left[sortBy.value]
     const rightValue = right[sortBy.value]
     const comparison = typeof leftValue === 'number' && typeof rightValue === 'number'
@@ -86,6 +92,7 @@ async function checkout() {
     customerName.value = ''
     customerPhone.value = ''
     await loadLessons()
+    if (selectedTeacherId.value) await loadTeacherLessons()
   } catch (error) {
     checkoutError.value = error.message || 'We could not submit your order. Please try again.'
   } finally {
@@ -113,7 +120,47 @@ async function loadLessons() {
   }
 }
 
+async function loadTeachers() {
+  try {
+    const response = await fetch(`${apiBaseUrl}/teachers`)
+    const result = await response.json()
+    if (!response.ok) throw new Error(result.error || 'Could not load teachers.')
+    teachers.value = result
+  } catch (error) {
+    console.error('Could not load teachers:', error)
+    teacherError.value = error.message || 'Could not load teachers right now.'
+  }
+}
+
+async function loadTeacherLessons() {
+  teacherError.value = ''
+  teacherEnrolment.value = null
+  if (!selectedTeacherId.value) {
+    teacherLessons.value = []
+    return
+  }
+
+  try {
+    const [lessonsResponse, enrolmentResponse] = await Promise.all([
+      fetch(`${apiBaseUrl}/teachers/${selectedTeacherId.value}/lessons`),
+      fetch(`${apiBaseUrl}/teachers/${selectedTeacherId.value}/enrolment`),
+    ])
+    const lessonResult = await lessonsResponse.json()
+    const enrolmentResult = await enrolmentResponse.json()
+    if (!lessonsResponse.ok) throw new Error(lessonResult.error || 'Could not load this teacher’s lessons.')
+    if (!enrolmentResponse.ok) throw new Error(enrolmentResult.error || 'Could not load enrolment information.')
+    teacherLessons.value = lessonResult
+    teacherEnrolment.value = enrolmentResult.enrolment
+  } catch (error) {
+    console.error('Could not load a teacher’s lessons:', error)
+    teacherLessons.value = []
+    teacherError.value = error.message || 'Could not load this teacher’s lessons right now.'
+  }
+}
+
 async function searchLessons() {
+  selectedTeacherId.value = ''
+  teacherLessons.value = []
   const query = searchTerm.value.trim()
   if (!query) {
     await loadLessons()
@@ -135,7 +182,10 @@ async function searchLessons() {
   }
 }
 
-onMounted(loadLessons)
+onMounted(() => {
+  loadLessons()
+  loadTeachers()
+})
 </script>
 
 <template>
@@ -206,6 +256,19 @@ onMounted(loadLessons)
           </div>
         </form>
         <label>
+          Browse by teacher
+          <select v-model="selectedTeacherId" @change="loadTeacherLessons">
+            <option value="">All teachers</option>
+            <option v-for="teacher in teachers" :key="teacher.id" :value="String(teacher.id)">
+              {{ teacher.firstName }} {{ teacher.lastName }} ({{ teacher.lessonCount }} classes)
+            </option>
+          </select>
+        </label>
+        <p v-if="teacherError" class="error-message teacher-message" role="alert">{{ teacherError }}</p>
+        <p v-else-if="selectedTeacherId && teacherEnrolment !== null" class="teacher-message" role="status">
+          Enrolments across this teacher’s classes: {{ teacherEnrolment }}
+        </p>
+        <label>
           Sort lessons by
           <select v-model="sortBy">
             <option value="subject">Subject</option>
@@ -224,7 +287,7 @@ onMounted(loadLessons)
       </div>
 
       <section class="lesson-grid" aria-label="Available coding classes">
-        <article v-for="lesson in sortedLessons" :key="lesson.id" class="lesson-card">
+        <article v-for="lesson in displayedLessons" :key="lesson.id" class="lesson-card">
           <div class="lesson-icon" aria-hidden="true">
             <i :class="lesson.icon || 'fa-solid fa-book-open'"></i>
           </div>
