@@ -38,6 +38,11 @@ const cartTotal = computed(() => {
   return cartItems.value.reduce((total, lesson) => total + Number(lesson.price || 0), 0)
 })
 
+function teacherName(teacherId) {
+  const teacher = teachers.value.find((item) => item.id === teacherId)
+  return teacher ? `${teacher.firstName} ${teacher.lastName}` : ''
+}
+
 function addToCart(lesson) {
   if (lesson.spaces <= 0) return
 
@@ -292,6 +297,9 @@ onMounted(() => {
             <i :class="lesson.icon || 'fa-solid fa-book-open'"></i>
           </div>
           <p class="lesson-location">{{ lesson.location }}</p>
+          <p v-if="teacherName(lesson.teacherId)" class="lesson-teacher">
+            Teacher: {{ teacherName(lesson.teacherId) }}
+          </p>
           <h2>{{ lesson.subject }}</h2>
           <div class="lesson-details">
             <span>&pound;{{ lesson.price }} per term</span>

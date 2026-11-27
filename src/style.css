@@ -47,6 +47,7 @@ h1 { max-width: 720px; margin: 0.5rem 0; font-size: clamp(2.25rem, 6vw, 4rem); l
 .lesson-icon { font-size: 2rem; }
 .lesson-icon i { color: #5766c7; }
 .lesson-location { margin: 1rem 0 0.25rem; color: #5766c7; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+.lesson-teacher { margin: 0 0 0.25rem; color: #586174; font-size: 0.9rem; }
 .lesson-card h2 { margin: 0.25rem 0 1rem; font-size: 1.2rem; }
 .lesson-details { display: flex; justify-content: space-between; gap: 0.5rem; margin-top: auto; padding: 0.75rem 0; color: #586174; font-size: 0.9rem; }
 button { width: 100%; padding: 0.75rem 1rem; border: 0; border-radius: 0.65rem; color: white; background: #5766c7; font: inherit; font-weight: 700; }
