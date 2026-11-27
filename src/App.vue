@@ -20,6 +20,11 @@ const selectedTeacherId = ref('')
 const teacherLessons = ref([])
 const teacherEnrolment = ref(null)
 const teacherError = ref('')
+const checkoutValid = computed(() => {
+  const name = customerName.value.trim()
+  const phone = customerPhone.value.trim()
+  return /^[A-Za-z ]{2,}$/.test(name) && /[A-Za-z]/.test(name) && /^\d{7,20}$/.test(phone)
+})
 
 const displayedLessons = computed(() => {
   const source = selectedTeacherId.value ? teacherLessons.value : lessons.value
@@ -60,6 +65,10 @@ function removeFromCart(index) {
 async function checkout() {
   checkoutError.value = ''
   orderMessage.value = ''
+  if (!checkoutValid.value) {
+    checkoutError.value = 'Enter a name using letters and a phone number using 7–20 digits.'
+    return
+  }
   isSubmitting.value = true
 
   const quantities = new Map()
@@ -224,14 +233,14 @@ onMounted(() => {
         <form class="checkout-form" @submit.prevent="checkout">
           <h3>Checkout</h3>
           <label>
-            Full name
-            <input v-model="customerName" type="text" required minlength="2" autocomplete="name" />
+            Full name (letters only)
+            <input v-model="customerName" type="text" required minlength="2" pattern="[A-Za-z ]{2,}" autocomplete="name" />
           </label>
           <label>
-            Phone number
-            <input v-model="customerPhone" type="tel" required pattern="[0-9+() .-]{7,20}" autocomplete="tel" />
+            Phone number (7–20 digits)
+            <input v-model="customerPhone" type="tel" required pattern="[0-9]{7,20}" autocomplete="tel" />
           </label>
-          <button type="submit" :disabled="isSubmitting">
+          <button type="submit" :disabled="isSubmitting || !checkoutValid">
             {{ isSubmitting ? 'Submitting order…' : 'Submit order' }}
           </button>
         </form>
@@ -253,7 +262,7 @@ onMounted(() => {
     <template v-else>
       <div class="sort-controls">
         <form class="search-form" @submit.prevent="searchLessons">
-          <label for="lesson-search">Search by subject or location</label>
+          <label for="lesson-search">Search by subject, location, price or spaces</label>
           <div class="search-input-row">
             <input id="lesson-search" v-model="searchTerm" type="search" maxlength="100" />
             <button type="submit">Search</button>
