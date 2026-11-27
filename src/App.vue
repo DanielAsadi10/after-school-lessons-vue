@@ -20,12 +20,14 @@ const selectedTeacherId = ref('')
 const teacherLessons = ref([])
 const teacherEnrolment = ref(null)
 const teacherError = ref('')
+// Keep checkout enabled only when the name and phone match the accepted formats.
 const checkoutValid = computed(() => {
   const name = customerName.value.trim()
   const phone = customerPhone.value.trim()
   return /^[A-Za-z ]{2,}$/.test(name) && /[A-Za-z]/.test(name) && /^\d{7,20}$/.test(phone)
 })
 
+// Sort either the full catalogue or the currently selected teacher's lessons.
 const displayedLessons = computed(() => {
   const source = selectedTeacherId.value ? teacherLessons.value : lessons.value
   return [...source].sort((left, right) => {
@@ -39,15 +41,18 @@ const displayedLessons = computed(() => {
   })
 })
 
+// Calculate the current cart total from its lesson entries.
 const cartTotal = computed(() => {
   return cartItems.value.reduce((total, lesson) => total + Number(lesson.price || 0), 0)
 })
 
+// Resolve a lesson's teacher id to the name shown on its card.
 function teacherName(teacherId) {
   const teacher = teachers.value.find((item) => item.id === teacherId)
   return teacher ? `${teacher.firstName} ${teacher.lastName}` : ''
 }
 
+// Add one available place to the cart and reserve it in the displayed stock.
 function addToCart(lesson) {
   if (lesson.spaces <= 0) return
 
@@ -55,6 +60,7 @@ function addToCart(lesson) {
   cartItems.value.push({ ...lesson })
 }
 
+// Remove a cart entry and return its place to the displayed lesson stock.
 function removeFromCart(index) {
   const [removedLesson] = cartItems.value.splice(index, 1)
   const lesson = lessons.value.find((item) => item.id === removedLesson.id)
@@ -62,6 +68,7 @@ function removeFromCart(index) {
   if (lesson) lesson.spaces += 1
 }
 
+// Persist updated stock and the order, then refresh the catalogue on success.
 async function checkout() {
   checkoutError.value = ''
   orderMessage.value = ''
@@ -114,6 +121,7 @@ async function checkout() {
   }
 }
 
+// Fetch the lesson catalogue and expose loading or API errors to the page.
 async function loadLessons() {
   isLoading.value = true
   loadError.value = ''
@@ -134,6 +142,7 @@ async function loadLessons() {
   }
 }
 
+// Fetch teacher names and lesson counts for the teacher selector and cards.
 async function loadTeachers() {
   try {
     const response = await fetch(`${apiBaseUrl}/teachers`)
@@ -146,6 +155,7 @@ async function loadTeachers() {
   }
 }
 
+// Fetch a selected teacher's lessons and total enrolment count.
 async function loadTeacherLessons() {
   teacherError.value = ''
   teacherEnrolment.value = null
@@ -172,6 +182,7 @@ async function loadTeacherLessons() {
   }
 }
 
+// Search the API by subject, location, price, or available spaces.
 async function searchLessons() {
   selectedTeacherId.value = ''
   teacherLessons.value = []
@@ -196,6 +207,7 @@ async function searchLessons() {
   }
 }
 
+// Load the catalogue and teacher list when Vue first displays this page.
 onMounted(() => {
   loadLessons()
   loadTeachers()
